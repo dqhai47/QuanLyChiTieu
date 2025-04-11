@@ -1,0 +1,47 @@
+﻿@model QuanLyChiTieu.Models.NguoiDung
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Register" method="post">
+    <div>
+        <label>Họ:</label>
+        <input asp-for="fname" class="form-control" />
+        <span asp-validation-for="fname" class="text-danger"></span>
+    </div>
+    <div>
+        <label>Tên:</label>
+        <input asp-for="lname" class="form-control" />
+        <span asp-validation-for="lname" class="text-danger"></span>
+    </div>
+    <div>
+        <label>Số điện thoại:</label>
+        <input asp-for="phone" class="form-control" />
+    </div>
+    <div>
+        <label>Email:</label>
+        <input asp-for="email" class="form-control" />
+    </div>
+    <div>
+        <label>Giới tính:</label>
+        <select asp-for="gender" class="form-control">
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+        </select>
+    </div>
+    <div>
+        <label>Tên đăng nhập:</label>
+        <input asp-for="username" class="form-control" />
+        <span asp-validation-for="username" class="text-danger"></span>
+    </div>
+    <div>
+        <label>Mật khẩu:</label>
+        <input asp-for="pwd" class="form-control" type="password" />
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng ký</button>
+</form>
+
+<a asp-action="Login">Đã có tài khoản? Đăng nhập</a>

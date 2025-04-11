@@ -1,0 +1,19 @@
+﻿@model QuanLyChiTieu.Models.NguoiDung
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<h2>Đăng nhập</h2>
+
+<form asp-action="Login" method="post">
+    <div class="form-group">
+        <label>Tên đăng nhập</label>
+        <input asp-for="username" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Mật khẩu</label>
+        <input asp-for="pwd" type="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+</form>
