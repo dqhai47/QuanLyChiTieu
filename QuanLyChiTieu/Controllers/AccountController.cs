@@ -56,7 +56,13 @@ namespace QuanLyChiTieu.Controllers
         public IActionResult Login(string username, string password)
         {
             var user = _context.NguoiDung
-                .FirstOrDefault(u => u.username == username && u.pwd == password && u.status_account == true);
+                        .FirstOrDefault(u =>
+                            u.username != null &&
+                            u.pwd != null &&
+                            u.username.Trim().ToLower() == username.Trim().ToLower() &&
+                            u.pwd.Trim() == password.Trim() &&
+                            u.status_account == true);
+
 
             if (user != null)
             {
