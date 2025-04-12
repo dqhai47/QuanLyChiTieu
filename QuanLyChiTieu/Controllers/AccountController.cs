@@ -19,26 +19,53 @@ namespace QuanLyChiTieu.Controllers
         }
 
         // POST: Account/Register
+
+        [AcceptVerbs("GET", "POST")]
+        public IActionResult IsUsernameInUse(string username)
+        {
+            var exists = _context.NguoiDung.Any(u => u.username == username);
+            return Json(!exists);
+        }
+
+        [AcceptVerbs("GET", "POST")]
+        public IActionResult IsEmailInUse(string email)
+        {
+            var exists = _context.NguoiDung.Any(u => u.email == email);
+            return Json(!exists);
+        }
+
+        [AcceptVerbs("GET", "POST")]
+        public IActionResult IsPhoneInUse(string phone)
+        {
+            var exists = _context.NguoiDung.Any(u => u.phone == phone);
+            return Json(!exists);
+        }
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Register(NguoiDung model)
         {
             if (ModelState.IsValid)
             {
-                var existUser = _context.NguoiDung.FirstOrDefault(x => x.username == model.username);
-                if (existUser != null)
+                var existsUsername = _context.NguoiDung.Any(u => u.username == model.username);
+                var existsEmail = _context.NguoiDung.Any(u => u.email == model.email);
+                var existsPhone = _context.NguoiDung.Any(u => u.phone == model.phone);
+
+                if (existsUsername || existsEmail || existsPhone)
                 {
-                    ModelState.AddModelError("username", "Tên đăng nhập đã tồn tại!");
+                    if (existsUsername)
+                        ModelState.AddModelError("username", "Tên đăng nhập đã tồn tại.");
+                    if (existsEmail)
+                        ModelState.AddModelError("email", "Email đã tồn tại.");
+                    if (existsPhone)
+                        ModelState.AddModelError("phone", "Số điện thoại đã tồn tại.");
+
                     return View(model);
                 }
 
-                // Gán role mặc định là người dùng thường (vd: ID = 2)
-                model.id_loainguoidung = 2;
-                model.create_at = DateTime.Now;
-
                 _context.NguoiDung.Add(model);
                 _context.SaveChanges();
-
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Auth");
             }
 
             return View(model);
@@ -92,5 +119,7 @@ namespace QuanLyChiTieu.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+
+
     }
 }

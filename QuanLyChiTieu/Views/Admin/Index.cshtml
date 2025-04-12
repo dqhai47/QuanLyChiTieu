@@ -1,5 +1,110 @@
 ﻿@{
     ViewBag.Title = "Trang quản trị";
 }
-<h2>Chào mừng admin: @(Context.Session.GetString("fullname") ?? "Người dùng")</h2>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .admin-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            height: 60px;
+        }
+
+        .sidebar {
+            width: 200px;
+            min-height: 700px;
+            background-color: #f8f9fa;
+        }
+
+        .content {
+            flex: 1;
+            min-height: 700px;
+            background-color: #ffffff;
+            margin-left: 20px;
+            padding: 20px;
+        }
+
+        .logout-btn {
+            background-color: #ffffff;
+            color: #e53935;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header d-flex justify-content-between align-items-center px-4">
+            <div class="sidebar-heading text-center py-3">
+                <img src="~/images/logo_qlct.png" alt="logo" width="80px"/>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span>Xin chào, @(Context.Session.GetString("fullname") ?? "Người dùng")</span>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="d-flex p-4">
+            <!-- Sidebar -->
+            <div class="bg-white border-end" id="sidebar-wrapper">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-house-door me-2"></i> Trang chủ
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-house-door me-2"></i> Danh sách người dùng
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-house-door me-2"></i> Báo cáo thống kê
+                    </a>
+                    <a href="#submenu2" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person-lines-fill me-2"></i> Quản lý chi tiêu
+                    </a>
+                    <div class="collapse ps-4" id="submenu2">
+                        <a href="#" class="list-group-item list-group-item-action">Tiền chi</a>
+                        <a href="#" class="list-group-item list-group-item-action">Tiền thu</a>
+                        <a href="#" class="list-group-item list-group-item-action">Báo cáo thống kê</a>
+                    </div>
+                    <a href="#submenu1" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person-lines-fill me-2"></i> Cài đặt
+                    </a>
+                    <div class="collapse ps-4" id="submenu1">
+                        <a href="#" class="list-group-item list-group-item-action">Loại người dùng</a>
+                        <a href="#" class="list-group-item list-group-item-action">Danh mục</a>
+                        <a href="#" class="list-group-item list-group-item-action">Phân loại</a>
+                        <a href="#" class="list-group-item list-group-item-action">Loại tiền tệ</a>
+                    </div>
+                    <form asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="list-group-item list-group-item-action">Đăng xuất</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content">
+                <h4>Dashboard</h4>
+                <p>Chào mừng bạn đến trang quản trị hệ thống.</p>
+                <!-- Thêm nội dung quản lý ở đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
 
