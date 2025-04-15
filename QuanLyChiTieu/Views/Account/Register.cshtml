@@ -27,7 +27,7 @@
         .register-box {
             max-width: 800px;
             margin: auto;
-            margin-top: 5%;
+            margin-top: 10px;
             display: flex;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             border-radius: 12px;
@@ -75,25 +75,27 @@
         <div class="register-right">
             <h4 class="mb-4 text-center text-danger">ĐĂNG KÝ</h4>
 
-            <form asp-action="Register" method="post">
+            <form asp-action="Register" id="registerForm" method="post">
                 @Html.AntiForgeryToken()
                 <div class="mb-3">
                     <label>Họ: <span style="color: red">*</span></label>
                     <input asp-for="fname" class="form-control" />
-                    <span asp-validation-for="fname" class="text-danger"></span>
+                    <em><span asp-validation-for="fname" class="text-danger"></span></em>
                 </div>
                 <div class="mb-3">
                     <label>Tên: <span style="color: red">*</span></label>
                     <input asp-for="lname" class="form-control" />
-                    <span asp-validation-for="lname" class="text-danger"></span>
+                    <em><span asp-validation-for="lname" class="text-danger"></span></em>
                 </div>
                 <div class="mb-3">
-                    <label>Số điện thoại: </label>
+                    <label>Số điện thoại: <span style="color: red">*</span></label>
                     <input asp-for="phone" class="form-control" />
+                    <em><span asp-validation-for="phone" class="text-danger"></span></em>
                 </div>
                 <div class="mb-3">
-                    <label>Email: </label>
+                    <label>Email: <span style="color: red">*</span></label>
                     <input asp-for="email" class="form-control" />
+                    <em><span asp-validation-for="email" class="text-danger"></span></em>
                 </div>
                 <div class="mb-3">
                     <label>Giới tính:</label>
@@ -105,19 +107,45 @@
                 <div class="mb-3">
                     <label>Tên đăng nhập: <span style="color: red">*</span></label>
                     <input asp-for="username" class="form-control" />
-                    <span asp-validation-for="username" class="text-danger"></span>
+                    <em><span asp-validation-for="username" class="text-danger"></span></em>
                 </div>
                 <div class="mb-3">
                     <label>Mật khẩu: <span style="color: red">*</span></label>
-                    <input asp-for="pwd" class="form-control" type="password" />
+                    <input asp-for="pwd" id="pwd" class="form-control" type="password" />
+                    <em><span asp-validation-for="pwd" class="text-danger"></span></em>
+                </div>
+                <div class="mb-3">
+                    <label>Nhập lại khẩu: <span style="color: red">*</span></label>
+                    <input id="re_pwd" class="form-control" type="password" />
+                    <em><span id="pwdError" style="color:red; font-size: 13px;"></span></em>
                 </div>
                 <button type="submit" class="btn btn-register w-100">Đăng ký</button>
             </form>
-              <a asp-action="Login">Đã có tài khoản? Đăng nhập</a>
+            <div class="mb-3 mt-2" style="text-align: center;">
+                <a asp-action="Login">Bạn đã có tài khoản? <span style="color:red">Đăng nhập</span></a>
+            </div>
         </div>
     </div>
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#registerForm').on('submit', function (e) {
+            var pwd = $('#pwd').val();
+            var confirmPwd = $('#re_pwd').val();
+
+            if (pwd !== confirmPwd) {
+                e.preventDefault(); // Ngăn form submit
+                $('#pwdError').text('Mật khẩu và nhập lại mật khẩu không khớp!');
+                $('#re_pwd').focus();
+            } else {
+                $('#pwdError').text(''); // Xóa thông báo nếu khớp
+            }
+        });
+    });
+</script>
 
 
 

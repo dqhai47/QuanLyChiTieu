@@ -1,0 +1,36 @@
+﻿@model List<QuanLyChiTieu.Models.NguoiDung>
+
+@{
+    ViewBag.Title = "Danh sách người dùng";
+}
+
+<h2>Danh sách người dùng</h2>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Phone</th>
+            <th>Giới tính</th>
+            <th>Loại người dùng</th>
+            <th>Ghi chú</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.fname +" "+ @user.lname</td>
+                <td>@user.email</td>
+                <td>@user.username</td>
+                <td>@user.phone</td>
+                <td>@user.gender</td>
+                <td></td> 
+                <td>@user.descriptions</td> 
+            </tr>
+        }
+    </tbody>
+</table>

@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <Folder Include="Views\Account\" />
+    <Folder Include="Views\NewFolder\" />
+    <Folder Include="Views\NguoiDung\" />
   </ItemGroup>
 
 </Project>

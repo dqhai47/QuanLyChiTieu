@@ -65,7 +65,7 @@ namespace QuanLyChiTieu.Controllers
 
                 _context.NguoiDung.Add(model);
                 _context.SaveChanges();
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Account", "Login");
             }
 
             return View(model);
