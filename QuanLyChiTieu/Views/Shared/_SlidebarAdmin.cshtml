@@ -1,0 +1,33 @@
+﻿<div class="bg-white border-end" id="sidebar-wrapper">
+    <div class="list-group list-group-flush">
+        <a href="@Url.Action("Index", "Admin")" class="list-group-item list-group-item-action">
+            <i class="bi bi-house-door me-2"></i> Trang chủ
+        </a>
+        <a href="@Url.Action("DanhSachNguoiDung", "Admin")" class="list-group-item list-group-item-action">
+            <i class="bi bi-house-door me-2"></i> Danh sách người dùng
+        </a>
+        <a href="@Url.Action("Reports", "Admin")" class="list-group-item list-group-item-action">
+            <i class="bi bi-house-door me-2"></i> Báo cáo thống kê
+        </a>
+        <a href="#submenu2" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-lines-fill me-2"></i> Quản lý chi tiêu
+        </a>
+        <div class="collapse ps-4" id="submenu2">
+            <a href="@Url.Action("Revenue", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Tiền thu</a>
+            <a href="@Url.Action("MoneySpent", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Tiền chi</a>
+            <a href="@Url.Action("Report", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Báo cáo thống kê</a>
+        </div>
+        <a href="#submenu1" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-lines-fill me-2"></i> Cài đặt
+        </a>
+        <div class="collapse ps-4" id="submenu1">
+            <a href="@Url.Action("LoaiNguoiDung", "Setting", new { area = "Admin" })" class="list-group-item list-group-item-action">Loại người dùng</a>
+            <a href="@Url.Action("DanhMuc", "Setting", new { area = "Admin" })" class="list-group-item list-group-item-action">Danh mục</a>
+            <a href="@Url.Action("PhanLoai", "Setting", new { area = "Admin" })" class="list-group-item list-group-item-action">Phân loại</a>
+            <a href="@Url.Action("LoaiTienTe", "Setting", new { area = "Admin" })" class="list-group-item list-group-item-action">Loại tiền tệ</a>
+        </div>
+        <form asp-action="Logout" method="post" class="m-0">
+            <button type="submit" class="list-group-item list-group-item-action">Đăng xuất</button>
+        </form>
+    </div>
+</div>
