@@ -1,13 +1,18 @@
-﻿namespace QuanLyChiTieu.Models
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
+
+namespace QuanLyChiTieu.Models
 {
     public class LoaiTienTe
     {
-        public int Id { get; set; }
-        public string Sname { get; set; }
-        public string Scode { get; set; }
-        public bool Sdefault { get; set; }
-        public string Converts { get; set; }
-        public string Descriptions { get; set; }
+        [Key]  // Quan trọng!
+        public int id { get; set; }
+        public string sname { get; set; }
+        public string scode { get; set; }
+        public bool sdefault { get; set; }
+        public string converts { get; set; }
+        public string descriptions { get; set; }
     }
 
 }
