@@ -11,10 +11,10 @@ namespace QuanLyChiTieu.Controllers
             // Kiểm tra nếu không phải admin thì chuyển về Login
             if (HttpContext.Session.GetString("role") != "1")
             {
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Login", "Account");
             }
 
-            return View();
+            return View("Index");
         }
 
         private readonly IConfiguration _configuration;
@@ -56,12 +56,12 @@ namespace QuanLyChiTieu.Controllers
                 }
             }
 
-            return View(list);
+            return View("DanhSachNguoiDung",list);
         }
 
         public IActionResult LoaiNguoiDung()
         {
-            List<LoaiNguoiDung> list = new List<LoaiNguoiDung>();
+            List<LoaiNguoiDung> listLoaiNguoiDung = new List<LoaiNguoiDung>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -81,16 +81,17 @@ namespace QuanLyChiTieu.Controllers
                         descriptions = reader["descriptions"].ToString()
                     };
 
-                    list.Add(lnd);
+                    listLoaiNguoiDung.Add(lnd);
                 }
             }
 
-            return View(list);
+            return View("Setting/LoaiNguoiDung", listLoaiNguoiDung);
         }
+         
 
         public IActionResult DanhMuc()
         {
-            List<DanhMuc> list = new List<DanhMuc>();
+            List<DanhMuc> listDanhMuc = new List<DanhMuc>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -110,28 +111,28 @@ namespace QuanLyChiTieu.Controllers
                         descriptions = reader["descriptions"].ToString()
                     };
 
-                    list.Add(danhmuc);
+                    listDanhMuc.Add(danhmuc);
                 }
             }
 
-            return View(list);
+            return View("Setting/DanhMuc", listDanhMuc);
         }
 
-        public IActionResult PhanLoai()
+        public IActionResult LoaiChiTieu()
         {
-            List<PhanLoai> list = new List<PhanLoai>();
+            List<LoaiChiTieu> listLoaiChiTieu = new List<LoaiChiTieu>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "SELECT * FROM PhanLoai";
+                string sql = "SELECT * FROM LoaiChiTieu";
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
 
                 while (reader.Read())
                 {
-                    PhanLoai phanloai = new PhanLoai
+                    LoaiChiTieu loaichitieu = new LoaiChiTieu
                     {
                         id = Convert.ToInt32(reader["id"]),
                         sname = reader["sname"].ToString(),
@@ -139,16 +140,16 @@ namespace QuanLyChiTieu.Controllers
                         descriptions = reader["descriptions"].ToString()
                     };
 
-                    list.Add(phanloai);
+                    listLoaiChiTieu.Add(loaichitieu);
                 }
             }
 
-            return View(list);
+            return View("Setting/PhanLoai", listLoaiChiTieu);
         }
 
         public IActionResult LoaiTienTe()
         {
-            List<LoaiTienTe> list = new List<LoaiTienTe>();
+            List<LoaiTienTe> listLoaiTienTe = new List<LoaiTienTe>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -165,15 +166,16 @@ namespace QuanLyChiTieu.Controllers
                         id = Convert.ToInt32(reader["id"]),
                         sname = reader["sname"].ToString(),
                         scode = reader["scode"].ToString(),
+                        sdefault = reader["sdefault"].ToString(),
                         converts = reader["converts"].ToString(),
                         descriptions = reader["descriptions"].ToString()
                     };
 
-                    list.Add(loaitiente);
+                    listLoaiTienTe.Add(loaitiente);
                 }
             }
 
-            return View(list);
+            return View("Setting/LoaiTienTe", listLoaiTienTe);
         }
 
 

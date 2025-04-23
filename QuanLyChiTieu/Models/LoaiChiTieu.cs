@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace QuanLyChiTieu.Models
 {
-    public class PhanLoai
+    public class LoaiChiTieu
     {
         [Key]  // Quan trọng!
         public int id { get; set; }

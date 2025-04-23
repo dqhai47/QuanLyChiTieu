@@ -1,14 +1,14 @@
-﻿@model List<QuanLyChiTieu.Models.LoaiNguoiDung>
+﻿@model List<QuanLyChiTieu.Models.LoaiChiTieu>
 
 @{
-    ViewBag.Title = "Trang quản trị - Loại người dùng";
+    ViewBag.Title = "Trang quản trị - Loại chi tiêu";
 }
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Admin - Loại người dùng</title>
+    <title>Trang Admin - Loại chi tiêu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -65,41 +65,43 @@
 
             <!-- Main Content -->
             <div class="content">
-                <h2>Danh sách người dùng</h2>
+                <h2>Loại chi tiêu</h2>
 
                 <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>STT</th>
                             <th>Mã</th>
-                            <th>Tên</th>
+                            <th>Tên loại</th>
                             <th>Ghi chú</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
-                        {
+                        @{
                             var index = 1;
-                            foreach (var lnd in Model)
-                            {
-                                <tr>
-                                    <td>@index</td>
-                                    <td>@lnd.scode</td>
-                                    <td>@lnd.sname</td>
-                                    <td>@lnd.descriptions</td>
-                                    <td>
-                                        <!-- Các button hành động -->
-                                    </td>
-                                </tr>
-                                index++;
-                            }
                         }
-                        else
+                        @foreach (var loaichitieu in Model)
                         {
-                            <tr><td colspan="5">Không có dữ liệu.</td></tr>
+                            <tr>
+                                <td>@index</td>
+                                <td>@loaichitieu.scode</td>
+                                <td>@loaichitieu.sname</td>
+                                <td>@loaichitieu.descriptions</td>
+                                <td>
+                                    <div class="d-flex justify-content-center">
+                                        <a class="" style="background: none !important; border: none !important;cursor: pointer;" data-bs-toggle="modal" data-bs-target="#">
+                                            <span class="text-primary">[Sửa]</span>
+                                        </a>
+                                        <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" data-bs-toggle="modal" data-bs-target="#">
+                                            <span class="text-danger">[Xóa]</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
                         }
-                        
+
                     </tbody>
                 </table>
             </div>

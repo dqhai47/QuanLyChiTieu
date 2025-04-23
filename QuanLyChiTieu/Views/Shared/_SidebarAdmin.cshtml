@@ -1,30 +1,79 @@
-﻿<div class="bg-white border-end" id="sidebar-wrapper">
+﻿@{
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+}
+<style>
+    .list-group-item.active {
+        background-color: #f8f9fa !important;
+        font-weight: bold;
+    }
+    </style >
+<div class="bg-white border-end" id="sidebar-wrapper">
     <div class="list-group list-group-flush">
-        <a href="@Url.Action("Index", "Admin")" class="list-group-item list-group-item-action">
+
+        <!-- Báo cáo thống kê -->
+        <a href="@Url.Action("Index", "Admin")"
+           class="list-group-item list-group-item-action @(currentAction == "Index" && currentController == "Admin" ? "active fw-bold bg-dark" : "")">
             <i class="bi bi-house-door me-2"></i> Báo cáo thống kê
         </a>
-        <a href="@Url.Action("DanhSachNguoiDung", "Admin")" class="list-group-item list-group-item-action">
-            <i class="bi bi-house-door me-2"></i> Danh sách người dùng
+
+        <!-- Danh sách người dùng -->
+        <a href="@Url.Action("DanhSachNguoiDung", "Admin")"
+           class="list-group-item list-group-item-action @(currentAction == "DanhSachNguoiDung" ? "active fw-bold bg-dark" : "")">
+            <i class="bi bi-people me-2"></i> Danh sách người dùng
         </a>
-        <a href="#submenu2" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
-            <i class="bi bi-person-lines-fill me-2"></i> Quản lý chi tiêu
+
+        <!-- Quản lý chi tiêu -->
+        <a href="#submenu2" data-bs-toggle="collapse"
+           class="list-group-item list-group-item-action @(currentController == "Money" ? "active fw-bold bg-dark" : "")"
+           aria-expanded="@(currentController == "Money" ? "true" : "false")">
+            <i class="bi bi-wallet2 me-2"></i> Quản lý chi tiêu
         </a>
-        <div class="collapse ps-4" id="submenu2">
-            <a href="@Url.Action("Revenue", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Tiền thu</a>
-            <a href="@Url.Action("MoneySpent", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Tiền chi</a>
-            <a href="@Url.Action("Report", "Money", new { area = "Admin" })" class="list-group-item list-group-item-action">Báo cáo thống kê</a>
+        <div class="collapse ps-4 @(currentController == "Money" ? "show" : "")" id="submenu2">
+            <a href="@Url.Action("Revenue", "Money", new { area = "Admin" })"
+               class="list-group-item list-group-item-action @(currentAction == "Revenue" ? "active fw-bold bg-dark" : "")">
+                Tiền thu
+            </a>
+            <a href="@Url.Action("MoneySpent", "Money", new { area = "Admin" })"
+               class="list-group-item list-group-item-action @(currentAction == "MoneySpent" ? "active fw-bold bg-dark" : "")">
+                Tiền chi
+            </a>
+            <a href="@Url.Action("Report", "Money", new { area = "Admin" })"
+               class="list-group-item list-group-item-action @(currentAction == "Report" ? "active fw-bold bg-dark" : "")">
+                Báo cáo thống kê
+            </a>
         </div>
-        <a href="#submenu1" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
-            <i class="bi bi-person-lines-fill me-2"></i> Cài đặt
+
+        <!-- Cài đặt -->
+        <a href="#submenu1" data-bs-toggle="collapse"
+           class="list-group-item list-group-item-action @(currentAction == "LoaiNguoiDung" || currentAction == "DanhMuc" || currentAction == "LoaiChiTieu" || currentAction == "LoaiTienTe" ? "active fw-bold bg-dark" : "")"
+           aria-expanded="@(currentAction == "LoaiNguoiDung" || currentAction == "DanhMuc" || currentAction == "LoaiChiTieu" || currentAction == "LoaiTienTe" ? "true" : "false")">
+            <i class="bi bi-gear me-2"></i> Cài đặt
         </a>
-        <div class="collapse ps-4" id="submenu1">
-            <a href="@Url.Action("LoaiNguoiDung", "Admin")" class="list-group-item list-group-item-action">Loại người dùng</a>
-            <a href="@Url.Action("DanhMuc", "Admin")" class="list-group-item list-group-item-action">Danh mục</a>
-            <a href="@Url.Action("PhanLoai", "Admin")" class="list-group-item list-group-item-action">Phân loại</a>
-            <a href="@Url.Action("LoaiTienTe", "Admin")" class="list-group-item list-group-item-action">Loại tiền tệ</a>
+        <div class="collapse ps-4 @(currentAction == "LoaiNguoiDung" || currentAction == "DanhMuc" || currentAction == "LoaiChiTieu" || currentAction == "LoaiTienTe" ? "show" : "")" id="submenu1">
+            <a href="@Url.Action("LoaiNguoiDung", "Admin")"
+               class="list-group-item list-group-item-action @(currentAction == "LoaiNguoiDung" ? "active fw-bold bg-dark" : "")">
+                Loại người dùng
+            </a>
+            <a href="@Url.Action("DanhMuc", "Admin")"
+               class="list-group-item list-group-item-action @(currentAction == "DanhMuc" ? "active fw-bold bg-dark" : "")">
+                Danh mục
+            </a>
+            <a href="@Url.Action("LoaiChiTieu", "Admin")"
+               class="list-group-item list-group-item-action @(currentAction == "LoaiChiTieu" ? "active fw-bold bg-dark" : "")">
+                Loại chi tiêu
+            </a>
+            <a href="@Url.Action("LoaiTienTe", "Admin")"
+               class="list-group-item list-group-item-action @(currentAction == "LoaiTienTe" ? "active fw-bold bg-dark" : "")">
+                Loại tiền tệ
+            </a>
         </div>
+
+        <!-- Logout -->
         <form asp-action="Logout" method="post" class="m-0">
-            <button type="submit" class="list-group-item list-group-item-action">Đăng xuất</button>
+            <button type="submit" class="list-group-item list-group-item-action">
+                Đăng xuất
+            </button>
         </form>
     </div>
 </div>
