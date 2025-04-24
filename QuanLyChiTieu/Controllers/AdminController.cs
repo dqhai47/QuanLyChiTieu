@@ -166,7 +166,7 @@ namespace QuanLyChiTieu.Controllers
                         id = Convert.ToInt32(reader["id"]),
                         sname = reader["sname"].ToString(),
                         scode = reader["scode"].ToString(),
-                        sdefault = reader["sdefault"].ToString(),
+                        sdefault = Convert.ToBoolean(reader["sdefault"]), // Fix: Convert string to bool
                         converts = reader["converts"].ToString(),
                         descriptions = reader["descriptions"].ToString()
                     };
@@ -177,6 +177,73 @@ namespace QuanLyChiTieu.Controllers
 
             return View("Setting/LoaiTienTe", listLoaiTienTe);
         }
+
+
+        [HttpPost]
+        public IActionResult LuuLoaiNguoiDung(IFormCollection form)
+        {
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            int.TryParse(form["Id"], out int id);
+            string maLoai = form["MaLoai"];
+            string tenLoai = form["TenLoai"];
+            string ghiChu = form["GhiChu"];
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd;
+
+                if (id > 0)
+                {
+                    // Cập nhật
+                    string sql = @"UPDATE LoaiNguoiDung 
+                           SET scode = @scode, sname = @sname, descriptions = @descriptions 
+                           WHERE id = @id";
+                    cmd = new SqlCommand(sql, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                }
+                else
+                {
+                    // Thêm mới
+                    string sql = @"INSERT INTO LoaiNguoiDung (scode, sname, descriptions) 
+                           VALUES (@scode, @sname, @descriptions)";
+                    cmd = new SqlCommand(sql, conn);
+                }
+
+                cmd.Parameters.AddWithValue("@scode", maLoai);
+                cmd.Parameters.AddWithValue("@sname", tenLoai);
+                cmd.Parameters.AddWithValue("@descriptions", string.IsNullOrEmpty(ghiChu) ? "" : ghiChu);
+
+                cmd.ExecuteNonQuery();
+            }
+
+            TempData["Success"] = id > 0
+                ? "Cập nhật loại người dùng thành công!"
+                : "Thêm loại người dùng mới thành công!";
+
+            return RedirectToAction("LoaiNguoiDung");
+        }
+
+        [HttpPost]
+        public IActionResult XoaLoaiNguoiDung(int id)
+        {
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "DELETE FROM LoaiNguoiDung WHERE id = @id";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            TempData["Success"] = "Xóa loại người dùng thành công!";
+            return RedirectToAction("LoaiNguoiDung");
+        }
+
 
 
     }
