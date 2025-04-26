@@ -1,5 +1,11 @@
 ﻿@model List<QuanLyChiTieu.Models.NguoiDung>
-
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: absolute; right: 0;">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+}
 @{
     ViewBag.Title = "Trang quản trị - Danh sách người dùng";
 }
@@ -49,14 +55,7 @@
 <body>
     <div class="admin-container">
         <!-- Header -->
-        <div class="admin-header d-flex justify-content-between align-items-center px-4">
-            <div class="sidebar-heading text-center py-3">
-                <img src="~/images/logo_qlct.png" alt="logo" width="80px" />
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <span>Xin chào, @(Context.Session.GetString("fullname") ?? "Người dùng")</span>
-            </div>
-        </div>
+        @await Html.PartialAsync("_HeaderAdmin")
 
         <!-- Body -->
         <div class="d-flex p-4">
@@ -66,8 +65,15 @@
             <!-- Main Content -->
             <div class="content">
                 <h2>Danh sách người dùng</h2>
-
-                <table class="table table-bordered table-hover">
+                <div class="row">
+                    <div class="col-8">
+                        <button class="btn btn-success" onclick="openNguoiDungModal()">➕ Thêm mới</button>
+                    </div>
+                    <div class="col-4">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Nhập mã hoặc tên...">
+                    </div>
+                </div>
+                <table class="table table-bordered table-hover mt-3">
                     <thead>
                         <tr>
                             <th>STT</th>
@@ -82,13 +88,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @{
-                            var index = 1;
-                        }
-
-                        @foreach (var user in Model)
+                        @if (Model != null && Model.Any())
                         {
-                            <tr>
+                            var index = 1;
+                            foreach (var user in Model)
+                            {
+                                <tr>
                                 <td>@index</td>
                                 <td>@user.fname @user.lname</td>
                                 <td>@user.email</td>
@@ -99,16 +104,32 @@
                                 <td>@user.descriptions</td>
                                 <td>
                                     <div class="d-flex justify-content-center">
-                                        <a class="" style="background: none !important; border: none !important;cursor: pointer;" data-bs-toggle="modal" data-bs-target="#">
+                                        <a class="" style="background: none !important; border: none !important;cursor: pointer;"
+                                               onclick="openNguoiDungModal(
+                                                '@user.id',
+                                                '@user.fname',
+                                                '@user.lname',
+                                                '@user.gender',
+                                                '@user.phone',
+                                                '@user.email',
+                                                '@user.username',
+                                                '',
+                                                '@user.ten_loai',
+                                                '@user.descriptions')">
                                             <span class="text-primary">[Sửa]</span>
                                         </a>
-                                        <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" data-bs-toggle="modal" data-bs-target="#">
+                                            <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" onclick="openDeleteNguoiDung('@user.id')">
                                             <span class="text-danger">[Xóa]</span>
                                         </a>                            
                                     </div>
                                 </td>
-                            </tr>
-                            index++;
+                                </tr>
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5">Không có dữ liệu.</td></tr>
                         }
                     </tbody>
                 </table>
@@ -116,8 +137,159 @@
         </div>
     </div>
 
+
+    <div class="modal fade" id="nguoiDungModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="@Url.Action("LuuNguoiDung")" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="inputId" />
+                    <div class="mb-2">
+                        <label>Họ và tên đệm:</label>
+                        <input type="text" name="fname" id="inputFname" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Tên:</label>
+                        <input type="text" name="lname" id="inputLname" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Giới tính:</label>
+                        <input type="text" name="gender" id="inputGender" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Số điện thoại:</label>
+                        <input type="text" name="phone" id="inputPhone" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Email:</label>
+                        <input type="text" name="email" id="inputEmail" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Username:</label>
+                        <input type="text" name="username" id="inputUsername" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label>Loại người dùng:</label>
+                        <div class="d-flex justify-content-center">
+                            <div class="d-flex flex-wrap">
+                                @* @foreach (var loai in (List<QuanLyChiTieu.Models.LoaiNguoiDung>)ViewBag.listLoaiNguoiDung) *@
+                                @* { *@
+                                @*     <div class="form-check me-3"> *@
+                                @*         <input class="form-check-input" type="checkbox" *@
+                                @*                name="SelectedLoaiNguoiDungIds" *@
+                                @*                value="@loai.id" *@
+                                @*                id="loaiNguoiDung_@loai.id"> *@
+                                @*         <label class="form-check-label" for="loaiNguoiDung_@loai.id"> *@
+                                @*             @loai.sname *@
+                                @*         </label> *@
+                                @*     </div> *@
+                                @* } *@
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input" name="status_account" id="inputStatus" />
+                        <label class="form-check-label" for="inputStatus">Trạng thái hoạt động</label>
+                    </div>
+                    <div class="mb-2">
+                        <label>Ghi chú:</label>
+                        <textarea name="GhiChu" id="inputGhiChu" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeleteNguoiDungModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="deleteForm" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn xóa người dùng này không?</p>
+                    <input type="hidden" name="id" id="deleteNguoiDungId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @section Scripts {
+        <script>
+
+
+            function openNguoiDungModal(id, fname, lname, gender, phone, email, username, trangthai, loainguoidung, ghichu) {
+                // Kiểm tra nếu có ID (đang chỉnh sửa)
+                if (id) {
+                    // Đang chỉnh sửa
+                    $('#modalLabel').text('Chỉnh sửa thông tin người dùng');
+                } else {
+                    // Đang thêm mới
+                    $('#modalLabel').text('Thêm mới thông tin người dùng');
+                }
+
+                $('#inputId').val(id || '');
+                $('#inputFname').val(fname || '');
+                $('#inputLname').val(lname || '');
+                $('#inputGender').val(gender || '');
+                $('#inputPhone').val(phone || '');
+                $('#inputEmail').val(email || '');
+                $('#inputUsername').val(username || '');
+
+                $('#inputStatus').val('');
+
+                $('#inputlname').val('');
+
+                $('#inputGhiChu').val(ghichu || '');
+
+                $('#nguoiDungModal').modal('show');
+            }
+        </script>
+        <script>
+            setTimeout(function () {
+                var alertBox = document.querySelector('.alert');
+                if (alertBox) {
+                    var alert = bootstrap.Alert.getOrCreateInstance(alertBox);
+                    alert.close();
+                }
+            }, 2000); // 2 giây = 2000ms
+        </script>
+
+
+        <!-- Lọc tại clien -->
+        <script>
+            document.getElementById('searchInput').addEventListener('input', function () {
+                const keyword = this.value.toLowerCase();
+                const rows = document.querySelectorAll('table tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(keyword) ? '' : 'none';
+                });
+            });
+        </script>
+        <script>
+            function openDeleteNguoiDung(id) {
+                $('#deleteNguoiDungId').val(id);
+                $('#deleteForm').attr('action', '/Admin/XoaNguoiDung'); // đúng với tên controller/action bạn đang dùng
+                $('#confirmDeleteNguoiDungModal').modal('show');
+            }
+        </script>
+
+    }
 </body>
 </html>
 

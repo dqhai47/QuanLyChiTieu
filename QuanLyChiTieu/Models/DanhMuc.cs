@@ -9,7 +9,7 @@ namespace QuanLyChiTieu.Models
         public string sname { get; set; }
         public string scode { get; set; }
         public bool sdefault { get; set; }
-        public string descriptions { get; set; }
+        public string? descriptions { get; set; }
     }
 
 }

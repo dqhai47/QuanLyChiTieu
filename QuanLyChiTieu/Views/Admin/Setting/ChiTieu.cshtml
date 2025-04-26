@@ -73,7 +73,7 @@
                         <input type="text" class="form-control" id="searchInput" placeholder="Nhập mã hoặc tên...">
                     </div>
                 </div>
-                <table class="table table-bordered table-hover mt-3">
+                <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>STT</th>
@@ -84,7 +84,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
+                         @if (Model != null && Model.Any())
                         {
                             var index = 1;
                             foreach (var loaichitieu in Model)

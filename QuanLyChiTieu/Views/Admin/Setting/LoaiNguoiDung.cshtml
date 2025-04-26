@@ -55,14 +55,7 @@
 <body>
     <div class="admin-container">
         <!-- Header -->
-        <div class="admin-header d-flex justify-content-between align-items-center px-4">
-            <div class="sidebar-heading text-center py-3">
-                <img src="~/images/logo_qlct.png" alt="logo" width="80px" />
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <span>Xin chào, @(Context.Session.GetString("fullname") ?? "Người dùng")</span>
-            </div>
-        </div>
+        @await Html.PartialAsync("_HeaderAdmin")
 
         <!-- Body -->
         <div class="d-flex p-4">
@@ -73,10 +66,10 @@
             <div class="content">
                 <h2>Danh sách Loại người dùng</h2>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-8">
                         <button class="btn btn-success" onclick="openLoaiNguoiDungModal()">➕ Thêm mới</button>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <input type="text" class="form-control" id="searchInput" placeholder="Nhập mã hoặc tên...">
                     </div>
                 </div>
@@ -108,11 +101,10 @@
                                                data-bs-toggle="modal" data-bs-target="#editModal">
                                                 <span class="text-primary">[Sửa]</span>
                                             </a>
-                                            <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" onclick="openDeleteModal('@lnd.id')">
+                                            <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" onclick="openDeleteLoaiNguoiDung('@lnd.id')">
                                                 <span class="text-danger">[Xóa]</span>
                                             </a>
                                         </div>
-
                                     </td>
                                 </tr>
                                 index++;
@@ -158,7 +150,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmDeleteLoaiNguoiDungModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="deleteForm" method="post" class="modal-content">
                 <div class="modal-header">
@@ -223,10 +215,10 @@
             });
         </script>
         <script>
-            function openDeleteModal(id) {
+            function openDeleteLoaiNguoiDung(id) {
                 $('#deleteLoaiNguoiDungId').val(id);
                 $('#deleteForm').attr('action', '/Admin/XoaLoaiNguoiDung'); // đúng với tên controller/action bạn đang dùng
-                $('#confirmDeleteModal').modal('show');
+                $('#confirmDeleteLoaiNguoiDungModal').modal('show');
             }
         </script>
 
