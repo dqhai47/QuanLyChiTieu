@@ -24,20 +24,16 @@
 
         <!-- Quản lý chi tiêu -->
         <a href="#submenu2" data-bs-toggle="collapse"
-           class="list-group-item list-group-item-action @(currentController == "Money" ? "active fw-bold bg-dark" : "")"
-           aria-expanded="@(currentController == "Money" ? "true" : "false")">
-            <i class="bi bi-wallet2 me-2"></i> Quản lý chi tiêu
+           class="list-group-item list-group-item-action @(currentAction == "IncomeAndExpense" || currentAction == "Report" ? "active fw-bold bg-dark" : "")"
+           aria-expanded="@(currentAction == "IncomeAndExpense" || currentAction == "Report" ? "true" : "false")">
+            <i class="bi bi-gear me-2"></i> Quản lý chi tiêu
         </a>
-        <div class="collapse ps-4 @(currentController == "Money" ? "show" : "")" id="submenu2">
-            <a href="@Url.Action("Revenue", "Money", new { area = "Admin" })"
-               class="list-group-item list-group-item-action @(currentAction == "Revenue" ? "active fw-bold bg-dark" : "")">
-                Tiền thu
+        <div class="collapse ps-4 @(currentAction == "IncomeAndExpense" || currentAction == "Report" ? "show" : "")" id="submenu2">
+            <a href="@Url.Action("IncomeAndExpense", "Admin")"
+               class="list-group-item list-group-item-action @(currentAction == "IncomeAndExpense" ? "active fw-bold bg-dark" : "")">
+                Tổng quan
             </a>
-            <a href="@Url.Action("MoneySpent", "Money", new { area = "Admin" })"
-               class="list-group-item list-group-item-action @(currentAction == "MoneySpent" ? "active fw-bold bg-dark" : "")">
-                Tiền chi
-            </a>
-            <a href="@Url.Action("Report", "Money", new { area = "Admin" })"
+            <a href="@Url.Action("Report", "Admin")"
                class="list-group-item list-group-item-action @(currentAction == "Report" ? "active fw-bold bg-dark" : "")">
                 Báo cáo thống kê
             </a>

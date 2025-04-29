@@ -1,15 +1,22 @@
-﻿namespace QuanLyChiTieu.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace QuanLyChiTieu.Models
 {
     public class ChiTieu
     {
-        public int Id { get; set; }
-        public int Id_PhanLoai { get; set; }
-        public int Id_DanhMuc { get; set; }
-        public int Id_User { get; set; }
-        public int Id_LoaiTienTe { get; set; }
-        public decimal Total { get; set; }
-        public DateTime CreateAt { get; set; }
-        public string Notes { get; set; }
+        internal string? ten_loaichitieu;
+        internal string? ten_danhmuc;
+        internal string? ten_loaitiente;
+        [Key]
+        public int id { get; set; }
+        public string? titles { get; set; }
+        public int id_loaichitieu { get; set; }
+        public int id_danhmuc { get; set; }
+        public int id_user { get; set; }
+        public int id_loaitiente { get; set; }
+        public decimal total { get; set; }
+        public DateTime create_at { get; set; }
+        public string? notes { get; set; }
     }
 
 }

@@ -67,7 +67,7 @@
                 <h2>Danh sách người dùng</h2>
                 <div class="row">
                     <div class="col-8">
-                        <button class="btn btn-success" onclick="openNguoiDungModal()">➕ Thêm mới</button>
+                        <button class="btn btn-success" onclick="openNguoiDungModal('', '', '', '', '', '', '', '', '')">➕ Thêm mới</button>
                     </div>
                     <div class="col-4">
                         <input type="text" class="form-control" id="searchInput" placeholder="Nhập mã hoặc tên...">
@@ -83,6 +83,7 @@
                             <th>Số điện thoại</th>
                             <th>Giới tính</th>
                             <th>Loại người dùng</th>
+                            <th>Trạng thái</th>
                             <th>Ghi chú</th>
                             <th></th>
                         </tr>
@@ -101,6 +102,7 @@
                                 <td>@user.phone</td>
                                 <td>@user.gender</td>
                                 <td>@user.ten_loai</td>
+                                <td>@(user.status_account == true ? "Hoạt động" : "")</td>
                                 <td>@user.descriptions</td>
                                 <td>
                                     <div class="d-flex justify-content-center">
@@ -113,7 +115,7 @@
                                                 '@user.phone',
                                                 '@user.email',
                                                 '@user.username',
-                                                '',
+                                                '@user.status_account',
                                                 '@user.ten_loai',
                                                 '@user.descriptions')">
                                             <span class="text-primary">[Sửa]</span>
@@ -129,7 +131,7 @@
                         }
                         else
                         {
-                            <tr><td colspan="5">Không có dữ liệu.</td></tr>
+                            <tr><td colspan="10">Không có dữ liệu.</td></tr>
                         }
                     </tbody>
                 </table>
@@ -137,8 +139,8 @@
         </div>
     </div>
 
-
-    <div class="modal fade" id="nguoiDungModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    
+    <div class="modal fade" id="nguoiDungModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static" data-bs-focus="false">
         <div class="modal-dialog">
             <form action="@Url.Action("LuuNguoiDung")" method="post" class="modal-content">
                 <div class="modal-header">
@@ -157,7 +159,13 @@
                     </div>
                     <div class="mb-2">
                         <label>Giới tính:</label>
-                        <input type="text" name="gender" id="inputGender" class="form-control" required />
+                        <div class="d-flex justify-content-center">
+                            <select class="form-select" name="gender" id="inputGender" required>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-2">
                         <label>Số điện thoại:</label>
@@ -174,20 +182,12 @@
                     <div class="mb-2">
                         <label>Loại người dùng:</label>
                         <div class="d-flex justify-content-center">
-                            <div class="d-flex flex-wrap">
-                                @* @foreach (var loai in (List<QuanLyChiTieu.Models.LoaiNguoiDung>)ViewBag.listLoaiNguoiDung) *@
-                                @* { *@
-                                @*     <div class="form-check me-3"> *@
-                                @*         <input class="form-check-input" type="checkbox" *@
-                                @*                name="SelectedLoaiNguoiDungIds" *@
-                                @*                value="@loai.id" *@
-                                @*                id="loaiNguoiDung_@loai.id"> *@
-                                @*         <label class="form-check-label" for="loaiNguoiDung_@loai.id"> *@
-                                @*             @loai.sname *@
-                                @*         </label> *@
-                                @*     </div> *@
-                                @* } *@
-                            </div>
+                                <select class="form-select" name="id_loainguoidung" id="selectLoaiNguoiDung" required>
+                                    @foreach (var loai in (List<QuanLyChiTieu.Models.LoaiNguoiDung>)ViewBag.listLoaiNguoiDung)
+                                    {
+                                        <option value="@loai.id">@loai.sname</option>
+                                    }
+                                </select>
                         </div>
                     </div>
                     <div class="mb-2 form-check">
@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="confirmDeleteNguoiDungModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmDeleteNguoiDungModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static" data-bs-focus="false">
         <div class="modal-dialog">
             <form id="deleteForm" method="post" class="modal-content">
                 <div class="modal-header">
@@ -230,15 +230,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @section Scripts {
         <script>
-
-
             function openNguoiDungModal(id, fname, lname, gender, phone, email, username, trangthai, loainguoidung, ghichu) {
-                // Kiểm tra nếu có ID (đang chỉnh sửa)
                 if (id) {
-                    // Đang chỉnh sửa
                     $('#modalLabel').text('Chỉnh sửa thông tin người dùng');
                 } else {
-                    // Đang thêm mới
                     $('#modalLabel').text('Thêm mới thông tin người dùng');
                 }
 
@@ -249,15 +244,19 @@
                 $('#inputPhone').val(phone || '');
                 $('#inputEmail').val(email || '');
                 $('#inputUsername').val(username || '');
-
-                $('#inputStatus').val('');
-
-                $('#inputlname').val('');
-
+                $('#inputStatus').prop('checked', trangthai === 'True' || trangthai === true); // đúng trạng thái
                 $('#inputGhiChu').val(ghichu || '');
+
+                // ✅ Tìm và check đúng loại người dùng nếu truyền vào tên loại
+                $('#selectLoaiNguoiDung option').each(function () {
+                    if ($(this).text().trim() === loainguoidung.trim()) {
+                        $(this).prop('selected', true);
+                    }
+                });
 
                 $('#nguoiDungModal').modal('show');
             }
+
         </script>
         <script>
             setTimeout(function () {
