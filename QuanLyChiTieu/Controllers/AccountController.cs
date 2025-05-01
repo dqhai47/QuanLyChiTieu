@@ -94,18 +94,36 @@ namespace QuanLyChiTieu.Controllers
             if (user != null)
             {
                 // Lưu thông tin đăng nhập
-                HttpContext.Session.SetString("username", user.username);
-                HttpContext.Session.SetString("role", user.id_loainguoidung.ToString());
-                HttpContext.Session.SetString("fullname", user.fname + " " + user.lname);
+                HttpContext.Session.SetInt32("id_user", user.id);
+                // Updated code to handle potential null values for 'user.username' and other nullable properties
+                if (user != null)
+                {
+                    if (!string.IsNullOrEmpty(user.username))
+                    {
+                        HttpContext.Session.SetString("username", user.username);
+                    }
 
-                // Điều hướng tùy loại người dùng
-                if (user.id_loainguoidung == 1) // giả sử ID = 1 là Admin
-                {
-                    return RedirectToAction("Index", "Admin");
-                }
-                else
-                {
-                    return RedirectToAction("Index", "Home");
+                    HttpContext.Session.SetInt32("id_user", user.id);
+
+                    if (!string.IsNullOrEmpty(user.id_loainguoidung.ToString()))
+                    {
+                        HttpContext.Session.SetString("role", user.id_loainguoidung.ToString());
+                    }
+
+                    if (!string.IsNullOrEmpty(user.fname) && !string.IsNullOrEmpty(user.lname))
+                    {
+                        HttpContext.Session.SetString("fullname", user.fname + " " + user.lname);
+                    }
+
+                    // Điều hướng tùy loại người dùng
+                    if (user.id_loainguoidung == 1) // giả sử ID = 1 là Admin
+                    {
+                        return RedirectToAction("Index", "Admin");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
             }
 

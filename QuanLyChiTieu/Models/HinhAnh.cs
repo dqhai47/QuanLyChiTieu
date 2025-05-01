@@ -1,12 +1,15 @@
-﻿namespace QuanLyChiTieu.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace QuanLyChiTieu.Models
 {
     public class HinhAnh
     {
-        public int Id { get; set; }
-        public int Id_ChiTieu { get; set; }
-        public string UrlImage { get; set; }
-        public DateTime CreateAt { get; set; }
-        public string Notes { get; set; }
+        [Key]
+        public int id { get; set; }
+        public int id_chitieu { get; set; }
+        public string? url_image { get; set; }
+        public DateTime create_at { get; set; }
+        public string? notes { get; set; }
     }
 
 }

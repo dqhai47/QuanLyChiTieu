@@ -19,10 +19,12 @@ namespace QuanLyChiTieu.Controllers
         }
 
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
 
-        public AdminController(IConfiguration configuration)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment environment)
         {
             _configuration = configuration;
+            _environment = environment;
         }
 
         public IActionResult DanhSachNguoiDung()
@@ -264,7 +266,6 @@ namespace QuanLyChiTieu.Controllers
                         total = Convert.ToDecimal(reader["total"]),
                         create_at = Convert.ToDateTime(reader["create_at"]),
                         notes = reader["notes"].ToString()
-
                     };
 
                     listChiTieu.Add(chitieu);
@@ -769,6 +770,168 @@ namespace QuanLyChiTieu.Controllers
             return RedirectToAction("DanhSachNguoiDung");
         }
 
-        
+        [HttpPost]
+        public IActionResult LuuChiTieu(IFormCollection form, List<IFormFile> images)
+        {
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString))
+                throw new InvalidOperationException("Missing connection string.");
+
+            int.TryParse(form["id"], out int id);
+            string? titles = form["titles"];
+            int.TryParse(form["id_loaichitieu"], out int id_loaichitieu);
+            int.TryParse(form["id_danhmuc"], out int id_danhmuc);
+            int.TryParse(form["id_loaitiente"], out int id_loaitiente);
+            decimal.TryParse(form["total"], out decimal total);
+            string notes = form["notes"].ToString() ?? string.Empty;
+
+            // Lấy id_user từ đăng nhập
+            int? id_user = HttpContext.Session.GetInt32("id_user"); // cần lưu khi đăng nhập
+            if (id_user == null) return RedirectToAction("DangNhap"); // nếu chưa login
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd;
+                int id_chitieu = id;
+
+                if (id > 0)
+                {
+                    // Update ChiTieu
+                    string sqlUpdate = @"
+                UPDATE ChiTieu
+                SET titles = @titles,
+                    id_loaichitieu = @id_loaichitieu,
+                    id_danhmuc = @id_danhmuc,
+                    id_loaitiente = @id_loaitiente,
+                    total = @total,
+                    notes = @notes
+                WHERE id = @id";
+                    cmd = new SqlCommand(sqlUpdate, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                }
+                else
+                {
+                    // Insert ChiTieu
+                    string sqlInsert = @"
+                INSERT INTO ChiTieu (titles, id_loaichitieu, id_danhmuc, id_user, id_loaitiente, total, create_at, notes)
+                OUTPUT INSERTED.id
+                VALUES (@titles, @id_loaichitieu, @id_danhmuc, @id_user, @id_loaitiente, @total, GETDATE(), @notes)";
+                    cmd = new SqlCommand(sqlInsert, conn);
+                    cmd.Parameters.AddWithValue("@id_user", id_user);
+                }
+
+                cmd.Parameters.AddWithValue("@titles", titles ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@id_loaichitieu", id_loaichitieu);
+                cmd.Parameters.AddWithValue("@id_danhmuc", id_danhmuc);
+                cmd.Parameters.AddWithValue("@id_loaitiente", id_loaitiente);
+                cmd.Parameters.AddWithValue("@total", total);
+                cmd.Parameters.AddWithValue("@notes", string.IsNullOrEmpty(notes) ? "" : notes);
+
+                if (id > 0)
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                else
+                {
+                    // Lấy ID ChiTieu vừa tạo
+                    id_chitieu = (int)cmd.ExecuteScalar();
+                }
+
+                // Lưu ảnh nếu có
+                if (images != null && images.Count > 0)
+                {
+                    foreach (var file in images)
+                    {
+                        if (file.Length > 0)
+                        {
+                            string uploads = Path.Combine(_environment.WebRootPath, "uploads");
+                            if (!Directory.Exists(uploads))
+                                Directory.CreateDirectory(uploads);
+
+                            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                            string filePath = Path.Combine(uploads, fileName);
+
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                file.CopyTo(stream);
+                            }
+
+                            string sqlImage = @"INSERT INTO HinhAnh (id_chitieu, url_image, create_at, notes)
+                                        VALUES (@id_chitieu, @url_image, GETDATE(), '')";
+                            using (SqlCommand cmdImg = new SqlCommand(sqlImage, conn))
+                            {
+                                cmdImg.Parameters.AddWithValue("@id_chitieu", id_chitieu);
+                                cmdImg.Parameters.AddWithValue("@url_image", "/uploads/" + fileName);
+                                cmdImg.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                }
+            }
+
+            TempData["Success"] = id > 0 ? "Cập nhật thu - chi thành công!" : "Thêm thu - chi mới thành công!";
+            return RedirectToAction("IncomeAndExpense");
+        }
+
+        [HttpPost]
+        public IActionResult XoaChiTieu(int id)
+        {
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
+            }
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "DELETE FROM ChiTieu WHERE id = @id";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            TempData["Success"] = "Xóa thông tin chi - tiêu thành công!";
+            return RedirectToAction("IncomeAndExpense");
+        }
+
+        public JsonResult LayHinhAnhTheoChiTieu(int id)
+        {
+            List<string> imageUrls = new List<string>();
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
+            }
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "SELECT * FROM HinhAnh WHERE id_chitieu = @id";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+
+                while (reader.Read())
+                {
+                    string? url = reader["url_image"]?.ToString(); // Use null-conditional operator
+                    if (!string.IsNullOrEmpty(url)) // Check for null or empty before adding
+                    {
+                        imageUrls.Add(Url.Content("~/" + url));
+                    }
+                }
+
+                reader.Close();
+            }
+
+            return Json(imageUrls);
+        }
+
+
     }
 }

@@ -17,6 +17,8 @@ namespace QuanLyChiTieu.Models
         public decimal total { get; set; }
         public DateTime create_at { get; set; }
         public string? notes { get; set; }
+
+        public List<HinhAnh>? images { get; set; }
     }
 
 }

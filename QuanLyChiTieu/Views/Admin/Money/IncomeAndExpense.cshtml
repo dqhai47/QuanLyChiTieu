@@ -67,7 +67,7 @@
                 <h2>Quản lý chi tiêu</h2>
                 <div class="row">
                     <div class="col-8">
-                        <button class="btn btn-success" onclick="openQuanLyChiTieuModal()">➕ Thêm khoản thu - chi</button>
+                        <button class="btn btn-success" onclick="openChiTieuModal()">➕ Thêm khoản thu - chi</button>
                     </div>
                     <div class="col-4">
                         <input type="text" class="form-control" id="searchInput" placeholder="Nhập nội dung...">
@@ -96,15 +96,19 @@
                                     <td>@thuchi.titles</td>
                                     <td>@thuchi.ten_loaichitieu</td>
                                     <td>@thuchi.ten_danhmuc</td>
-                                    <td>@thuchi.total @thuchi.ten_loaitiente </td>
+                                    <td>@thuchi.total.ToString("N0") @thuchi.ten_loaitiente </td>
                                     <td>@thuchi.notes </td>
                                     <td>
                                         <div class="d-flex justify-content-center">
                                             <a class="" style="background: none !important; border: none !important;cursor: pointer;"
-                                               onclick="openQuanLyChiTieuModal()">
+                                               onclick="openChiTieuModal('@thuchi.id','@thuchi.titles','@thuchi.id_loaichitieu','@thuchi.id_danhmuc','@thuchi.id_loaitiente','@thuchi.total','@thuchi.notes')">
                                                 <span class="text-primary">[Sửa]</span>
                                             </a>
-                                            <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" onclick="">
+                                            <a class="ms-2" style="background: none !important; border: none !important; cursor: pointer;"
+                                               onclick="openXemTaiLieu('@thuchi.id')">
+                                                <span class="text-info">[Xem File]</span>
+                                            </a>
+                                            <a class="ms-2" style="background: none !important; border: none !important;cursor: pointer;" onclick="openDeleteChiTieu('@thuchi.id')">
                                                 <span class="text-danger">[Xóa]</span>
                                             </a>
                                         </div>
@@ -126,7 +130,7 @@
     <!-- Modal Thêm Thu Chi -->
     <div class="modal fade" id="updateChiTieuModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static" data-bs-focus="false">
         <div class="modal-dialog">
-            <form method="post" id="chiTieuForm" action="">
+            <form method="post" id="chiTieuForm" action="@Url.Action("LuuChiTieu")" enctype="multipart/form-data">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="modalLabel"></h5>
@@ -175,13 +179,11 @@
                             <label class="form-label">Số tiền</label>
                             <input type="number" class="form-control" name="total" id="total" required />
                         </div>
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
-                        <!-- Đính kèm ảnh -->
+                        <div class="mb-3">
+                            <label class="form-label">Đính kèm ảnh</label>
+                            <input type="file" class="form-control" name="images[]" id="images" accept="image/*" multiple />
+                            <div id="preview" class="mt-2 d-flex flex-wrap gap-2"></div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Ghi chú</label>
                             <textarea class="form-control" name="notes" id="notes"></textarea>
@@ -193,6 +195,22 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalXemTaiLieu" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tài liệu đính kèm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="taiLieuImages" class="d-flex flex-wrap gap-2 justify-content-start">
+                        <!-- Ảnh sẽ được thêm vào bằng JS -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -225,22 +243,81 @@
         </script>
 
         <script>
-            function openQuanLyChiTieuModal(id, title, loaichitieu, danhmuc, loaitiente, total, ghichu) {
-                // Kiểm tra nếu có ID (đang chỉnh sửa)
+            function openChiTieuModal(id, titles, idLoai, idDanhMuc, idTienTe, total, notes) {
                 if (id) {
-                    // Đang chỉnh sửa
-                    $('#modalLabel').text('Chỉnh sửa chi tiêu');
+                    $('#modalLabel').text('Chỉnh sửa khoản thu - chi');
                 } else {
-                    // Đang thêm mới
-                    $('#modalLabel').text('Thêm mới chi tiêu');
+                    $('#modalLabel').text('Thêm khoản thu - chi');
                 }
 
+                $('#chiTieuId').val(id || '');
+                $('#titles').val(titles || '');
 
-                // ✅ Set trạng thái checkbox
-                // $('#inputMacDinh').prop('checked', trangthai === 'True' || trangthai === true);
+                $('#selectLoaiChiTieu').val(idLoai || '').trigger('change');
+                $('#selectDanhMuc').val(idDanhMuc || '').trigger('change');
+                $('#selectLoaiTienTe').val(idTienTe || '').trigger('change');
+
+                $('#total').val(total || '');
+                $('#notes').val(notes || '');
 
                 $('#updateChiTieuModal').modal('show');
             }
+
+
+            function openDeleteChiTieu(id) {
+                if (confirm('Bạn có chắc muốn xóa khoản thu - chi này không?')) {
+                    window.location.href = '/Admin/XoaChiTieu?id=' + id;
+                }
+            }
+
+            $('#images').on('change', function (event) {
+                var preview = $('#preview');
+                preview.empty(); // Xóa ảnh cũ nếu có
+
+                $.each(event.target.files, function (i, file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var img = $('<img>')
+                            .attr('src', e.target.result)
+                            .addClass('rounded border')
+                            .css({
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                marginRight: '8px',
+                            });
+                        preview.append(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            function openXemTaiLieu(idChiTieu) {
+                fetch(`/Admin/LayHinhAnhTheoChiTieu?id=${idChiTieu}`)
+                    .then(response => response.json())
+                    .then(images => {
+                        const container = document.getElementById('taiLieuImages');
+                        container.innerHTML = ''; // Xóa ảnh cũ
+
+                        if (images.length === 0) {
+                            container.innerHTML = '<p>Không có tài liệu đính kèm.</p>';
+                        } else {
+                            images.forEach(url => {
+                                const img = document.createElement('img');
+                                img.src = url;
+                                img.className = 'border rounded';
+                                img.style.width = '120px';
+                                img.style.height = '120px';
+                                img.style.objectFit = 'cover';
+                                container.appendChild(img);
+                            });
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById('modalXemTaiLieu'));
+                        modal.show();
+                    });
+            }
+
         </script>
 
     }
