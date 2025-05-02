@@ -21,11 +21,6 @@ namespace QuanLyChiTieu.Controllers
 
         public IActionResult Index()
         {
-            // Kiểm tra nếu không phải admin thì chuyển về Login
-            if (HttpContext.Session.GetString("ma_quyenhan") == "ADMIN")
-            {
-                return RedirectToAction("Login", "Account");
-            }
             /*Kiểm tra đăng nhập trước, nếu chưa thì điều trang về login*/
             // Lấy id_user từ đăng nhập
             int? id_user = HttpContext.Session.GetInt32("id_user"); // cần lưu khi đăng nhập
