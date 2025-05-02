@@ -9,12 +9,11 @@
 @{
     ViewBag.Title = "Quản lý chi tiêu";
 }
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Admin - Quản lý chi tiêu</title>
+    <title>Trang Admin - Báo cáo thống kê</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -73,11 +72,20 @@
                         <input type="text" class="form-control" id="searchInput" placeholder="Nhập nội dung...">
                     </div>
                 </div>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <input type="date" class="form-control" id="startDate" placeholder="Ngày bắt đầu">
+                    </div>
+                    <div class="col-6">
+                        <input type="date" class="form-control" id="endDate" placeholder="Ngày kết thúc">
+                    </div>
+                </div>
                 <table class="table table-bordered table-hover mt-3">
                     <thead>
                         <tr>
                             <th>STT</th>
                             <th>Tiêu đề</th>
+                            <th>Ngày</th>
                             <th>Loại chi tiêu</th>
                             <th>Danh mục</th>
                             <th>Số tiền</th>
@@ -94,14 +102,15 @@
                                 <tr>
                                     <td>@index</td>
                                     <td>@thuchi.titles</td>
+                                    <td>@thuchi.create_at.ToString("dd/MM/yyyy")</td>
                                     <td>@thuchi.ten_loaichitieu</td>
                                     <td>@thuchi.ten_danhmuc</td>
-                                    <td>@thuchi.total.ToString("N0") @thuchi.ten_loaitiente </td>
+                                    <td>@thuchi.total.ToString("N0") @thuchi.ma_loaitiente </td>
                                     <td>@thuchi.notes </td>
                                     <td>
                                         <div class="d-flex justify-content-center">
                                             <a class="" style="background: none !important; border: none !important;cursor: pointer;"
-                                               onclick="openChiTieuModal('@thuchi.id','@thuchi.titles','@thuchi.id_loaichitieu','@thuchi.id_danhmuc','@thuchi.id_loaitiente','@thuchi.total','@thuchi.notes')">
+                                               onclick="openChiTieuModal('@thuchi.id','@thuchi.titles','@thuchi.id_loaichitieu','@thuchi.id_danhmuc','@thuchi.id_loaitiente','@thuchi.total.ToString("N0")','@thuchi.notes','@thuchi.create_at.ToString("yyyy-MM-dd")')">
                                                 <span class="text-primary">[Sửa]</span>
                                             </a>
                                             <a class="ms-2" style="background: none !important; border: none !important; cursor: pointer;"
@@ -119,7 +128,7 @@
                         }
                         else
                         {
-                            <tr><td colspan="7">Không có dữ liệu.</td></tr>
+                            <tr><td colspan="8">Không có dữ liệu.</td></tr>
                         }
                     </tbody>
                 </table>
@@ -180,8 +189,12 @@
                             <input type="number" class="form-control" name="total" id="total" required />
                         </div>
                         <div class="mb-3">
+                            <label for="create_at">Ngày thu/chi</label>
+                            <input type="date" class="form-control" id="create_at" name="create_at" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Đính kèm ảnh</label>
-                            <input type="file" class="form-control" name="images[]" id="images" accept="image/*" multiple />
+                            <input type="file" class="form-control" name="images" id="images" accept="image/*" multiple />
                             <div id="preview" class="mt-2 d-flex flex-wrap gap-2"></div>
                         </div>
                         <div class="mb-3">
@@ -207,7 +220,14 @@
                 </div>
                 <div class="modal-body">
                     <div id="taiLieuImages" class="d-flex flex-wrap gap-2 justify-content-start">
-                        <!-- Ảnh sẽ được thêm vào bằng JS -->
+                        <!-- Ảnh thu nhỏ sẽ được thêm vào bằng JS -->
+                    </div>
+                    <!-- Modal xem ảnh lớn -->
+                    <div id="fullImageContainer" class="d-none">
+                        <div class="text-center">
+                            <button type="button" class="btn-close" id="closeFullImageBtn" aria-label="Close"></button>
+                            <img id="fullImage" src="" class="w-100 rounded" style="object-fit: contain; max-height: 80vh;" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,9 +236,42 @@
 
 
 
+
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @section Scripts {
+        <script>
+            $(document).ready(function() {
+                $('#startDate, #endDate').on('change', function() {
+                    filterByDate();
+                });
+
+                function filterByDate() {
+                    const startDate = $('#startDate').val();
+                    const endDate = $('#endDate').val();
+
+                    // Chuyển đổi ngày sang đối tượng Date để dễ so sánh
+                    const startDateObj = new Date(startDate);
+                    const endDateObj = new Date(endDate);
+
+                    // Chuyển đổi thời gian từ bảng (giả sử là dd/MM/yyyy)
+                    $('table tbody tr').each(function() {
+                        const rowDate = $(this).find('td:nth-child(3)').text(); // Lấy ngày từ cột thứ 3
+                        const rowDateParts = rowDate.split('/');
+                        const rowDateObj = new Date(`${rowDateParts[2]}-${rowDateParts[1]}-${rowDateParts[0]}`); // Đảm bảo định dạng yyyy-MM-dd
+
+                        // Kiểm tra nếu ngày nằm trong khoảng thời gian
+                        if ((startDate && rowDateObj < startDateObj) || (endDate && rowDateObj > endDateObj)) {
+                            $(this).hide(); // Ẩn dòng nếu không trong khoảng thời gian
+                        } else {
+                            $(this).show(); // Hiện dòng nếu trong khoảng thời gian
+                        }
+                    });
+                }
+            });
+        </script>
+
         <script>
             setTimeout(function () {
                 var alertBox = document.querySelector('.alert');
@@ -243,9 +296,10 @@
         </script>
 
         <script>
-            function openChiTieuModal(id, titles, idLoai, idDanhMuc, idTienTe, total, notes) {
+            function openChiTieuModal(id, titles, idLoai, idDanhMuc, idTienTe, total, notes, create_at) {
                 if (id) {
                     $('#modalLabel').text('Chỉnh sửa khoản thu - chi');
+                    $('#create_at').val(create_at);
                 } else {
                     $('#modalLabel').text('Thêm khoản thu - chi');
                 }
@@ -259,6 +313,7 @@
 
                 $('#total').val(total || '');
                 $('#notes').val(notes || '');
+                
 
                 $('#updateChiTieuModal').modal('show');
             }
@@ -292,37 +347,51 @@
                 });
             });
 
-            function openXemTaiLieu(idChiTieu) {
-                fetch(`/Admin/LayHinhAnhTheoChiTieu?id=${idChiTieu}`)
-                    .then(response => response.json())
-                    .then(images => {
-                        const container = document.getElementById('taiLieuImages');
-                        container.innerHTML = ''; // Xóa ảnh cũ
+                        function openXemTaiLieu(idChiTieu) {
+                $.get(`/Admin/LayHinhAnhTheoChiTieu?id=${idChiTieu}`, function (images) {
+                    const container = $('#taiLieuImages');
+                    container.empty(); // Xóa ảnh cũ
 
-                        if (images.length === 0) {
-                            container.innerHTML = '<p>Không có tài liệu đính kèm.</p>';
-                        } else {
-                            images.forEach(url => {
-                                const img = document.createElement('img');
-                                img.src = url;
-                                img.className = 'border rounded';
-                                img.style.width = '120px';
-                                img.style.height = '120px';
-                                img.style.objectFit = 'cover';
-                                container.appendChild(img);
-                            });
-                        }
+                    if (images.length === 0) {
+                        container.html('<p>Không có tài liệu đính kèm.</p>');
+                    } else {
+                        images.forEach(url => {
+                            const img = $('<img />')
+                                .attr('src', url)
+                                .addClass('border rounded')
+                                .css({
+                                    'width': '120px',
+                                    'height': '120px',
+                                    'object-fit': 'cover'
+                                })
+                                .click(function () {
+                                    showFullImage(url); // Phóng to ảnh khi click
+                                });
+                            container.append(img);
+                        });
+                    }
 
-                        const modal = new bootstrap.Modal(document.getElementById('modalXemTaiLieu'));
-                        modal.show();
-                    });
+                    const modal = new bootstrap.Modal($('#modalXemTaiLieu'));
+                    modal.show();
+                });
             }
+
+            // Hiển thị ảnh lớn trong modal
+            function showFullImage(url) {
+                $('#fullImage').attr('src', url); // Cập nhật ảnh lớn
+                $('#fullImageContainer').removeClass('d-none'); // Hiển thị ảnh lớn
+            }
+
+            // Ẩn ảnh lớn khi nhấn nút đóng
+            $('#closeFullImageBtn').click(function () {
+                $('#fullImageContainer').addClass('d-none'); // Ẩn ảnh lớn
+            });
+
 
         </script>
 
     }
+
 </body>
 </html>
-
-
 

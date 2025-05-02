@@ -7,23 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Views\NewFolder\**" />
     <Compile Remove="Views\NguoiDung\**" />
-    <Content Remove="Views\NewFolder\**" />
     <Content Remove="Views\NguoiDung\**" />
-    <EmbeddedResource Remove="Views\NewFolder\**" />
     <EmbeddedResource Remove="Views\NguoiDung\**" />
-    <None Remove="Views\NewFolder\**" />
     <None Remove="Views\NguoiDung\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\Account\" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

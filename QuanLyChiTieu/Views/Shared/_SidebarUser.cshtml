@@ -1,0 +1,28 @@
+﻿@{
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+}
+<style>
+    .list-group-item.active {
+        font-weight: bold;
+    }
+</style>
+<div class="bg-white border-end" id="sidebar-wrapper">
+    <div class="list-group list-group-flush">
+        <!-- Quản lý chi tiêu -->
+        <a href="@Url.Action("Index", "Home")"
+            class="list-group-item list-group-item-action @(currentAction == "Index" ? "active fw-bold bg-dark" : "")">
+            Tổng quan
+        </a>
+        <a href="@Url.Action("Report", "Home")"
+            class="list-group-item list-group-item-action @(currentAction == "Report" ? "active fw-bold bg-dark" : "")">
+            Báo cáo thống kê
+        </a>
+        <!-- Logout -->
+        <a href="@Url.Action("Logout", "Account")"
+           class="list-group-item list-group-item-action">
+            Đăng xuất
+        </a>
+
+    </div>
+</div>

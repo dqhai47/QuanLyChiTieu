@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using QuanLyChiTieu.Models;
 
 namespace QuanLyChiTieu.Controllers
@@ -6,10 +8,13 @@ namespace QuanLyChiTieu.Controllers
     public class AccountController : Controller
     {
         private readonly QuanLyChiTieuContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AccountController(QuanLyChiTieuContext context)
+
+        public AccountController(QuanLyChiTieuContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         // GET: Account/Register
@@ -82,54 +87,66 @@ namespace QuanLyChiTieu.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            var user = _context.NguoiDung
-                        .FirstOrDefault(u =>
-                            u.username != null &&
-                            u.pwd != null &&
-                            u.username.Trim().ToLower() == username.Trim().ToLower() &&
-                            u.pwd.Trim() == password.Trim() &&
-                            u.status_account == true);
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
 
-
-            if (user != null)
+            if (string.IsNullOrEmpty(connectionString))
             {
-                // Lưu thông tin đăng nhập
-                HttpContext.Session.SetInt32("id_user", user.id);
-                // Updated code to handle potential null values for 'user.username' and other nullable properties
-                if (user != null)
-                {
-                    if (!string.IsNullOrEmpty(user.username))
-                    {
-                        HttpContext.Session.SetString("username", user.username);
-                    }
-
-                    HttpContext.Session.SetInt32("id_user", user.id);
-
-                    if (!string.IsNullOrEmpty(user.id_loainguoidung.ToString()))
-                    {
-                        HttpContext.Session.SetString("role", user.id_loainguoidung.ToString());
-                    }
-
-                    if (!string.IsNullOrEmpty(user.fname) && !string.IsNullOrEmpty(user.lname))
-                    {
-                        HttpContext.Session.SetString("fullname", user.fname + " " + user.lname);
-                    }
-
-                    // Điều hướng tùy loại người dùng
-                    if (user.id_loainguoidung == 1) // giả sử ID = 1 là Admin
-                    {
-                        return RedirectToAction("Index", "Admin");
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
             }
 
-            ViewBag.Error = "Sai tài khoản hoặc mật khẩu!";
-            return View();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = @"
+            SELECT TOP 1 
+                nd.id, nd.username, nd.pwd, nd.fname, nd.lname, nd.id_loainguoidung, lnd.scode
+            FROM NguoiDung nd
+            JOIN LoaiNguoiDung lnd ON nd.id_loainguoidung = lnd.id
+            WHERE nd.username IS NOT NULL AND nd.pwd IS NOT NULL
+                AND LTRIM(RTRIM(LOWER(nd.username))) = @username
+                AND LTRIM(RTRIM(nd.pwd)) = @password
+                AND nd.status_account = 1";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@username", username.Trim().ToLower());
+                cmd.Parameters.AddWithValue("@password", password.Trim());
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    int id_user = Convert.ToInt32(reader["id"]);
+                    string? uname = reader["username"]?.ToString();
+                    string? fname = reader["fname"]?.ToString();
+                    string? lname = reader["lname"]?.ToString();
+                    int id_loainguoidung = Convert.ToInt32(reader["id_loainguoidung"]);
+                    string? scode = reader["scode"]?.ToString();
+
+                    HttpContext.Session.SetInt32("id_user", id_user);
+
+                    if (!string.IsNullOrEmpty(uname))
+                        HttpContext.Session.SetString("username", uname);
+
+                    HttpContext.Session.SetString("role", id_loainguoidung.ToString());
+
+                    if (!string.IsNullOrEmpty(fname) && !string.IsNullOrEmpty(lname))
+                        HttpContext.Session.SetString("fullname", fname + " " + lname);
+
+                    // So sánh scode để phân quyền
+                    HttpContext.Session.SetString("ma_quyenhan", scode);
+                    if (!string.IsNullOrEmpty(scode) && scode.ToUpper() == "ADMIN")
+                        return RedirectToAction("Index", "Admin");
+                    else
+                        return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ViewBag.Error = "Sai tài khoản hoặc mật khẩu!";
+                    return View();
+                }
+            }
         }
+
 
 
         public IActionResult Logout()

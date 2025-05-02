@@ -29,3 +29,34 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.admin-container {
+
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.admin-header {
+    height: 60px;
+}
+
+.sidebar {
+    width: 300px;
+    min-height: 700px;
+    left: 0;
+    background-color: #f8f9fa;
+}
+
+.content {
+    flex: 1;
+    min-height: 700px;
+    background-color: #ffffff;
+    margin-left: 20px;
+    padding: 20px;
+}
+
+.logout-btn {
+    background-color: #ffffff;
+    color: #e53935;
+    font-weight: bold;
+}

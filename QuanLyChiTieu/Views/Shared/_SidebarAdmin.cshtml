@@ -65,10 +65,10 @@
         </div>
 
         <!-- Logout -->
-        <form asp-action="Logout" method="post" class="m-0">
-            <button type="submit" class="list-group-item list-group-item-action">
-                Đăng xuất
-            </button>
-        </form>
+        <a href="@Url.Action("Logout", "Account")"
+           class="list-group-item list-group-item-action">
+            Đăng xuất
+        </a>
+
     </div>
 </div>

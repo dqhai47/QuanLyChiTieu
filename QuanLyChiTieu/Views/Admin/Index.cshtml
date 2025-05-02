@@ -1,4 +1,5 @@
-﻿@{
+﻿@using QuanLyChiTieu.Controllers
+@{
     ViewBag.Title = "Trang quản trị";
 }
 
@@ -46,15 +47,8 @@
 </head>
 <body>
     <div class="admin-container">
-        <!-- Header -->
-        <div class="admin-header d-flex justify-content-between align-items-center px-4">
-            <div class="sidebar-heading text-center py-3">
-                <img src="~/images/logo_qlct.png" alt="logo" width="80px"/>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <span>Xin chào, @(Context.Session.GetString("fullname") ?? "Người dùng")</span>
-            </div>
-        </div>
+         <!-- Header -->
+        @await Html.PartialAsync("_HeaderAdmin")
 
         <!-- Body -->
         <div class="d-flex p-4">
@@ -63,15 +57,66 @@
 
             <!-- Main Content -->
             <div class="content">
-                <h4>Dashboard</h4>
-                <p>Chào mừng bạn đến trang quản trị hệ thống.</p>
                 <!-- Thêm nội dung quản lý ở đây -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="alert alert-primary text-center">
+                            <h5>Tổng số người dùng</h5>
+                            <h2>@ViewBag.TotalUsers</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <canvas id="genderChart" height="100"></canvas>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5>Top 5 danh mục được sử dụng nhiều nhất</h5>
+                        <canvas id="categoryChart" height="100"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Biểu đồ giới tính (tròn)
+        new Chart(document.getElementById('genderChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Nam', 'Nữ'],
+                datasets: [{
+                    data: [@ViewBag.MaleCount, @ViewBag.FemaleCount],
+                    backgroundColor: ['#42a5f5', '#ef5350']
+                }]
+            }
+        });
+
+        // Biểu đồ danh mục (cột)
+        const categoryLabels = @Html.Raw(Json.Serialize(((List<CategoryStats>)ViewBag.CategoryStats).Select(c => c.Name)));
+        const categoryCounts = @Html.Raw(Json.Serialize(((List<CategoryStats>)ViewBag.CategoryStats).Select(c => c.Count)));
+
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: 'Số lần sử dụng',
+                    data: categoryCounts,
+                    backgroundColor: '#66bb6a'
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 

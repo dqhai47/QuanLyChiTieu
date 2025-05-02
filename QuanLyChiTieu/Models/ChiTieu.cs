@@ -7,6 +7,7 @@ namespace QuanLyChiTieu.Models
         internal string? ten_loaichitieu;
         internal string? ten_danhmuc;
         internal string? ten_loaitiente;
+        internal string? ma_loaitiente;
         [Key]
         public int id { get; set; }
         public string? titles { get; set; }

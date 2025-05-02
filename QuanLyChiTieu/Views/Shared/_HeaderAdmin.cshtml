@@ -1,8 +1,8 @@
 ﻿<div class="admin-header d-flex justify-content-between align-items-center px-4">
-    <div class="sidebar-heading text-center py-3">
-        <img src="~/images/logo_qlct.png" alt="logo" width="80px" />
+    <div class="sidebar-heading text-center py-3  mt-4 ms-5">
+        <img src="~/images/logo_qlct.png" alt="logo" width="80" />
     </div>
     <div class="d-flex align-items-center gap-2">
-        <span>Xin chào, @(Context.Session.GetString("fullname") ?? "Người dùng")</span>
+        <span>Xin chào, <span class="fw-bold">@(Context.Session.GetString("fullname") ?? "Người dùng")</span></span>
     </div>
 </div>

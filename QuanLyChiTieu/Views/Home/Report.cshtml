@@ -54,12 +54,12 @@
         <!-- Body -->
         <div class="d-flex p-4">
             <!-- Sidebar -->
-            @await Html.PartialAsync("_SidebarAdmin")
+            @await Html.PartialAsync("_SidebarUser")
 
             <!-- Main Content -->
             <div class="content">
                 <h3 class="mb-4">Báo cáo thống kê chi tiêu</h3>
-                <form method="get" action="@Url.Action("Report", "Admin")">
+                <form method="get" action="@Url.Action("Report", "Home")">
                     <div class="row mb-3">
                         <div class="col">
                             <label for="thang">Tháng</label>

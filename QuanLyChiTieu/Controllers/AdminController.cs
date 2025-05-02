@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using QuanLyChiTieu.Models;
 
 namespace QuanLyChiTieu.Controllers
@@ -10,10 +11,69 @@ namespace QuanLyChiTieu.Controllers
         public IActionResult Index()
         {
             // Kiểm tra nếu không phải admin thì chuyển về Login
-            if (HttpContext.Session.GetString("role") != "1")
+            if (HttpContext.Session.GetString("ma_quyenhan") != "ADMIN")
             {
                 return RedirectToAction("Login", "Account");
             }
+
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
+            }
+
+            int totalUsers = 0, maleCount = 0, femaleCount = 0;
+            List<CategoryStats> categoryStats = new();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Tổng số người dùng
+                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM NguoiDung", conn))
+                {
+                    totalUsers = (int)cmd.ExecuteScalar();
+                }
+
+                // Giới tính nam
+                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM NguoiDung WHERE gender = N'Nam'", conn))
+                {
+                    maleCount = (int)cmd.ExecuteScalar();
+                }
+
+                // Giới tính nữ
+                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM NguoiDung WHERE gender = N'Nữ'", conn))
+                {
+                    femaleCount = (int)cmd.ExecuteScalar();
+                }
+
+                // Top 5 danh mục dùng nhiều nhất
+                string topCategorySql = @"
+                SELECT TOP 5 DM.sname, COUNT(*) AS SoLan
+                FROM ChiTieu CT
+                JOIN DanhMuc DM ON CT.id_danhMuc = DM.id
+                GROUP BY DM.sname
+                ORDER BY SoLan DESC";
+
+                using (SqlCommand cmd = new SqlCommand(topCategorySql, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        categoryStats.Add(new CategoryStats
+                        {
+                            Name = reader["sname"].ToString(),
+                            Count = Convert.ToInt32(reader["SoLan"])
+                        });
+                    }
+                }
+            }
+
+            ViewBag.TotalUsers = totalUsers;
+            ViewBag.MaleCount = maleCount;
+            ViewBag.FemaleCount = femaleCount;
+            ViewBag.CategoryStats = categoryStats;
 
             return View("Index");
         }
@@ -237,19 +297,25 @@ namespace QuanLyChiTieu.Controllers
                 throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
             }
 
+            // Lấy id_user từ đăng nhập
+            int? id_user = HttpContext.Session.GetInt32("id_user"); // cần lưu khi đăng nhập
+            if (id_user == null) return RedirectToAction("Login", "Account"); // nếu chưa login
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "SELECT ct.id, ct.titles, ct.id_loaichitieu, ct.id_danhmuc, ct.id_loaitiente, ct.total, ct.create_at, ct.notes, " +
-                    "lct.sname AS ten_loaichitieu, dm.sname AS ten_danhmuc, ltt.sname AS ten_loaitiente " +
-                    "FROM ChiTieu ct " +
-                    "JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id " +
-                    "JOIN DanhMuc dm ON ct.id_danhmuc = dm.id " +
-                    "JOIN LoaiTienTe ltt ON ct.id_loaitiente = ltt.id;";
+                string sql = @"
+            SELECT ct.id, ct.titles, ct.id_loaichitieu, ct.id_danhmuc, ct.id_loaitiente, ct.total, ct.create_at, ct.notes, 
+                   lct.sname AS ten_loaichitieu, dm.sname AS ten_danhmuc, ltt.sname AS ten_loaitiente , ltt.scode AS ma_loaitiente 
+            FROM ChiTieu ct 
+            JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id 
+            JOIN DanhMuc dm ON ct.id_danhmuc = dm.id 
+            JOIN LoaiTienTe ltt ON ct.id_loaitiente = ltt.id
+            WHERE ct.id_user = @id_user";  // Thêm điều kiện WHERE để lọc theo id_user
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@id_user", id_user); // Thêm tham số cho id_user
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
-
 
                 while (reader.Read())
                 {
@@ -263,6 +329,7 @@ namespace QuanLyChiTieu.Controllers
                         ten_loaichitieu = reader["ten_loaichitieu"].ToString(),
                         ten_danhmuc = reader["ten_danhmuc"].ToString(),
                         ten_loaitiente = reader["ten_loaitiente"].ToString(),
+                        ma_loaitiente = reader["ma_loaitiente"].ToString(),
                         total = Convert.ToDecimal(reader["total"]),
                         create_at = Convert.ToDateTime(reader["create_at"]),
                         notes = reader["notes"].ToString()
@@ -334,11 +401,120 @@ namespace QuanLyChiTieu.Controllers
             return View("Money/IncomeAndExpense", listChiTieu);
         }
 
-        public IActionResult Report()
+        public IActionResult Report(int? thang, int? nam)
         {
+            var model = new ThongKeViewModel();
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
 
-            return View("Money/Report");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not found.");
+            }
+
+            // Lấy id_user từ đăng nhập
+            int? id_user = HttpContext.Session.GetInt32("id_user");
+            if (id_user == null) return RedirectToAction("Login", "Account");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Điều kiện lọc tháng/năm
+                string monthCondition = thang.HasValue ? "AND MONTH(ct.create_at) = @thang" : "";
+                string yearCondition = nam.HasValue ? "AND YEAR(ct.create_at) = @nam" : "";
+
+                // Tổng thu
+                SqlCommand cmdThu = new SqlCommand($@"
+            SELECT ISNULL(SUM(total), 0) 
+            FROM ChiTieu ct 
+            JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id 
+            WHERE lct.scode = 'TIEN-THU' AND ct.id_user = @id_user {monthCondition} {yearCondition}", conn);
+                cmdThu.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdThu.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdThu.Parameters.AddWithValue("@nam", nam.Value);
+                model.TongThu = (decimal)cmdThu.ExecuteScalar();
+
+                // Tổng chi
+                SqlCommand cmdChi = new SqlCommand($@"
+            SELECT ISNULL(SUM(total), 0) 
+            FROM ChiTieu ct 
+            JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id 
+            WHERE lct.scode = 'TIEN-CHI' AND ct.id_user = @id_user {monthCondition} {yearCondition}", conn);
+                cmdChi.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdChi.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdChi.Parameters.AddWithValue("@nam", nam.Value);
+                model.TongChi = (decimal)cmdChi.ExecuteScalar();
+
+                // Tổng loại chi tiêu đã dùng
+                SqlCommand cmdLoai = new SqlCommand($@"
+            SELECT COUNT(DISTINCT id_loaichitieu) 
+            FROM ChiTieu ct 
+            WHERE ct.id_user = @id_user {monthCondition} {yearCondition}", conn);
+                cmdLoai.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdLoai.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdLoai.Parameters.AddWithValue("@nam", nam.Value);
+                model.TongLoaiChiTieu = (int)cmdLoai.ExecuteScalar();
+
+                // Loại chi tiêu phổ biến nhất
+                SqlCommand cmdPhoBien = new SqlCommand($@"
+            SELECT TOP 1 lct.sname 
+            FROM ChiTieu ct
+            JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id
+            WHERE ct.id_user = @id_user {monthCondition} {yearCondition}
+            GROUP BY lct.sname
+            ORDER BY COUNT(*) DESC", conn);
+                cmdPhoBien.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdPhoBien.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdPhoBien.Parameters.AddWithValue("@nam", nam.Value);
+                object result = cmdPhoBien.ExecuteScalar();
+                model.LoaiChiTieuPhoBien = result != null ? result.ToString() : "Không có dữ liệu";
+
+                // Thống kê theo danh mục
+                SqlCommand cmdDanhMuc = new SqlCommand($@"
+            SELECT dm.sname, SUM(ct.total) AS tongTien
+            FROM ChiTieu ct
+            JOIN DanhMuc dm ON ct.id_danhmuc = dm.id
+            WHERE ct.id_user = @id_user {monthCondition} {yearCondition}
+            GROUP BY dm.sname", conn);
+                cmdDanhMuc.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdDanhMuc.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdDanhMuc.Parameters.AddWithValue("@nam", nam.Value);
+                SqlDataReader reader = cmdDanhMuc.ExecuteReader();
+                while (reader.Read())
+                {
+                    model.DanhMucThongKes.Add(new DanhMucThongKe
+                    {
+                        TenDanhMuc = reader["sname"].ToString(),
+                        TongTien = Convert.ToDecimal(reader["tongTien"])
+                    });
+                }
+                // Thống kê theo danh mục
+                SqlCommand cmdLoaiChiTieu = new SqlCommand($@"
+            SELECT lct.sname, SUM(ct.total) AS tongTien
+            FROM ChiTieu ct
+            JOIN LoaiChiTieu lct ON ct.id_loaichitieu = lct.id
+            WHERE ct.id_user = @id_user {monthCondition} {yearCondition}
+            GROUP BY lct.sname", conn);
+                cmdLoaiChiTieu.Parameters.AddWithValue("@id_user", id_user);
+                if (thang.HasValue) cmdLoaiChiTieu.Parameters.AddWithValue("@thang", thang.Value);
+                if (nam.HasValue) cmdLoaiChiTieu.Parameters.AddWithValue("@nam", nam.Value);
+                SqlDataReader readerLoai = cmdLoaiChiTieu.ExecuteReader();
+                while (readerLoai.Read())
+                {
+                    model.ChiTieuTheoLoaiList.Add(new ChiTieuTheoLoai
+                    {
+                        TenLoai = readerLoai["sname"].ToString(),
+                        TongTien = Convert.ToDecimal(readerLoai["tongTien"])
+                    });
+                }
+
+                reader.Close();
+            }
+
+            return View("Money/Report", model);
         }
+
+
 
 
         [HttpPost]
@@ -770,15 +946,17 @@ namespace QuanLyChiTieu.Controllers
             return RedirectToAction("DanhSachNguoiDung");
         }
 
+
         [HttpPost]
         public IActionResult LuuChiTieu(IFormCollection form, List<IFormFile> images)
         {
             string? connectionString = _configuration.GetConnectionString("DefaultConnection");
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Missing connection string.");
-
+            
             int.TryParse(form["id"], out int id);
             string? titles = form["titles"];
+            string? create_at = form["create_at"];
             int.TryParse(form["id_loaichitieu"], out int id_loaichitieu);
             int.TryParse(form["id_danhmuc"], out int id_danhmuc);
             int.TryParse(form["id_loaitiente"], out int id_loaitiente);
@@ -787,7 +965,7 @@ namespace QuanLyChiTieu.Controllers
 
             // Lấy id_user từ đăng nhập
             int? id_user = HttpContext.Session.GetInt32("id_user"); // cần lưu khi đăng nhập
-            if (id_user == null) return RedirectToAction("DangNhap"); // nếu chưa login
+            if (id_user == null) return RedirectToAction("Login", "Account"); // nếu chưa login
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -805,7 +983,9 @@ namespace QuanLyChiTieu.Controllers
                     id_danhmuc = @id_danhmuc,
                     id_loaitiente = @id_loaitiente,
                     total = @total,
+                    create_at = @create_at,
                     notes = @notes
+
                 WHERE id = @id";
                     cmd = new SqlCommand(sqlUpdate, conn);
                     cmd.Parameters.AddWithValue("@id", id);
@@ -816,7 +996,7 @@ namespace QuanLyChiTieu.Controllers
                     string sqlInsert = @"
                 INSERT INTO ChiTieu (titles, id_loaichitieu, id_danhmuc, id_user, id_loaitiente, total, create_at, notes)
                 OUTPUT INSERTED.id
-                VALUES (@titles, @id_loaichitieu, @id_danhmuc, @id_user, @id_loaitiente, @total, GETDATE(), @notes)";
+                VALUES (@titles, @id_loaichitieu, @id_danhmuc, @id_user, @id_loaitiente, @total, @create_at, @notes)";
                     cmd = new SqlCommand(sqlInsert, conn);
                     cmd.Parameters.AddWithValue("@id_user", id_user);
                 }
@@ -826,6 +1006,7 @@ namespace QuanLyChiTieu.Controllers
                 cmd.Parameters.AddWithValue("@id_danhmuc", id_danhmuc);
                 cmd.Parameters.AddWithValue("@id_loaitiente", id_loaitiente);
                 cmd.Parameters.AddWithValue("@total", total);
+                cmd.Parameters.AddWithValue("@create_at", create_at);
                 cmd.Parameters.AddWithValue("@notes", string.IsNullOrEmpty(notes) ? "" : notes);
 
                 if (id > 0)
@@ -835,7 +1016,7 @@ namespace QuanLyChiTieu.Controllers
                 else
                 {
                     // Lấy ID ChiTieu vừa tạo
-                    id_chitieu = (int)cmd.ExecuteScalar();
+                    id = (int)cmd.ExecuteScalar();
                 }
 
                 // Lưu ảnh nếu có
@@ -852,17 +1033,19 @@ namespace QuanLyChiTieu.Controllers
                             string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                             string filePath = Path.Combine(uploads, fileName);
 
+                            // Sao chép ảnh vào thư mục uploads
                             using (var stream = new FileStream(filePath, FileMode.Create))
                             {
                                 file.CopyTo(stream);
                             }
 
+                            // Lưu thông tin ảnh vào cơ sở dữ liệu
                             string sqlImage = @"INSERT INTO HinhAnh (id_chitieu, url_image, create_at, notes)
                                         VALUES (@id_chitieu, @url_image, GETDATE(), '')";
                             using (SqlCommand cmdImg = new SqlCommand(sqlImage, conn))
                             {
-                                cmdImg.Parameters.AddWithValue("@id_chitieu", id_chitieu);
-                                cmdImg.Parameters.AddWithValue("@url_image", "/uploads/" + fileName);
+                                cmdImg.Parameters.AddWithValue("@id_chitieu", id);
+                                cmdImg.Parameters.AddWithValue("@url_image", "/uploads/" + fileName); // Đường dẫn ảnh lưu trong DB
                                 cmdImg.ExecuteNonQuery();
                             }
                         }
@@ -915,14 +1098,14 @@ namespace QuanLyChiTieu.Controllers
                 cmd.Parameters.AddWithValue("@id", id);
 
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                SqlDataReader reader = cmd.ExecuteReader();
 
                 while (reader.Read())
                 {
                     string? url = reader["url_image"]?.ToString(); // Use null-conditional operator
                     if (!string.IsNullOrEmpty(url)) // Check for null or empty before adding
                     {
-                        imageUrls.Add(Url.Content("~/" + url));
+                        imageUrls.Add(Url.Content("~" + url));
                     }
                 }
 
@@ -932,6 +1115,18 @@ namespace QuanLyChiTieu.Controllers
             return Json(imageUrls);
         }
 
+        [HttpPost]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear(); // Xóa session
+            return RedirectToAction("Login", "Account"); // Chuyển hướng về trang login
+        }
 
+    }
+
+    public class CategoryStats
+    {
+        public string? Name { get; set; }
+        public int Count { get; set; }
     }
 }
